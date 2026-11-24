@@ -1,0 +1,24 @@
+Dinahosting DNS01 webhook installed.
+
+  groupName:  {{ .Values.groupName }}
+  solverName: dinahosting
+
+1. Create the credentials secret (if not done yet):
+
+   kubectl -n {{ .Values.certManager.namespace }} create secret generic {{ first .Values.credentialsSecretNames }} \
+     --from-literal=username=<api-user> --from-literal=password=<api-password>
+
+2. Reference it from a ClusterIssuer:
+
+   solvers:
+     - dns01:
+         webhook:
+           groupName: {{ .Values.groupName }}
+           solverName: dinahosting
+           config:
+             usernameSecretRef: {name: {{ first .Values.credentialsSecretNames }}, key: username}
+             passwordSecretRef: {name: {{ first .Values.credentialsSecretNames }}, key: password}
+
+Check the APIService is available:
+
+   kubectl get apiservice v1alpha1.{{ .Values.groupName }}

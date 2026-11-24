@@ -1,0 +1,30 @@
+# ClusterIssuer de ZeroSSL que resuelve DNS-01 con el webhook de Dinahosting.
+# Reutiliza el EAB existente (secreto zerossl-eab en cert-manager) con una
+# cuenta ACME propia, sin tocar el ClusterIssuer zerossl-prod (HTTP-01).
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: zerossl-dns
+spec:
+  acme:
+    server: https://acme.zerossl.com/v2/DV90
+    email: CAMBIAR@ejemplo.es  # mismo email que zerossl-prod
+    privateKeySecretRef:
+      name: zerossl-dns-account-key
+    externalAccountBinding:
+      keyID: CAMBIAR  # mismo keyID que zerossl-prod
+      keySecretRef:
+        name: zerossl-eab
+        key: secret
+    solvers:
+      - dns01:
+          webhook:
+            groupName: acme.zverp.com
+            solverName: dinahosting
+            config:
+              usernameSecretRef:
+                name: dinahosting-credentials
+                key: username
+              passwordSecretRef:
+                name: dinahosting-credentials
+                key: password

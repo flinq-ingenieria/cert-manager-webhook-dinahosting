@@ -1,0 +1,63 @@
+# API group under which the webhook registers. Must match
+# spec.acme.solvers[].dns01.webhook.groupName in the Issuer/ClusterIssuer.
+groupName: acme.zverp.com
+
+certManager:
+  namespace: cert-manager
+  serviceAccountName: cert-manager
+
+# Secrets with Dinahosting API credentials that the webhook may read.
+# They must live in certManager.namespace (cert-manager's cluster resource
+# namespace), which is where ClusterIssuer secret references are resolved.
+# Create them out of band, e.g.:
+#   kubectl -n cert-manager create secret generic dinahosting-credentials \
+#     --from-literal=username=... --from-literal=password=...
+credentialsSecretNames:
+  - dinahosting-credentials
+
+image:
+  repository: ghcr.io/flinq-ingenieria/cert-manager-webhook-dinahosting
+  # Defaults to the chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+replicaCount: 1
+
+# klog verbosity.
+logLevel: 2
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 443
+
+containerPort: 8443
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 48Mi
+  limits:
+    memory: 128Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,128 @@
+{{- $fullname := include "dinahosting-webhook.fullname" . -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $fullname }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+---
+# Read the apiserver's requestheader CA (extension API server authentication).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $fullname }}:webhook-authentication-reader
+  namespace: kube-system
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - kind: ServiceAccount
+    name: {{ $fullname }}
+    namespace: {{ .Release.Namespace }}
+---
+# Delegate authn/authz decisions to the core apiserver.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $fullname }}:auth-delegator
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: {{ $fullname }}
+    namespace: {{ .Release.Namespace }}
+---
+# The embedded apiserver watches API Priority and Fairness objects.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $fullname }}:flowcontrol
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["flowcontrol.apiserver.k8s.io"]
+    resources: ["prioritylevelconfigurations", "flowschemas"]
+    verbs: ["list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $fullname }}:flowcontrol
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $fullname }}:flowcontrol
+subjects:
+  - kind: ServiceAccount
+    name: {{ $fullname }}
+    namespace: {{ .Release.Namespace }}
+---
+# Allow cert-manager to call the solver API.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ $fullname }}:domain-solver
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [{{ .Values.groupName | quote }}]
+    resources: ["*"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $fullname }}:domain-solver
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ $fullname }}:domain-solver
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.certManager.serviceAccountName }}
+    namespace: {{ .Values.certManager.namespace }}
+{{- if .Values.credentialsSecretNames }}
+---
+# Read only the named Dinahosting credential secrets.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $fullname }}:credentials
+  namespace: {{ .Values.certManager.namespace }}
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames:
+      {{- toYaml .Values.credentialsSecretNames | nindent 6 }}
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $fullname }}:credentials
+  namespace: {{ .Values.certManager.namespace }}
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $fullname }}:credentials
+subjects:
+  - kind: ServiceAccount
+    name: {{ $fullname }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -1,0 +1,54 @@
+# Self-signed CA and serving certificate for the webhook's API server.
+# cert-manager's cainjector copies the CA into the APIService.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "dinahosting-webhook.selfSignedIssuer" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "dinahosting-webhook.rootCACertificate" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "dinahosting-webhook.rootCACertificate" . }}
+  duration: 43800h # 5y
+  issuerRef:
+    name: {{ include "dinahosting-webhook.selfSignedIssuer" . }}
+  commonName: "ca.{{ include "dinahosting-webhook.fullname" . }}.cert-manager"
+  isCA: true
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "dinahosting-webhook.rootCAIssuer" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+spec:
+  ca:
+    secretName: {{ include "dinahosting-webhook.rootCACertificate" . }}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "dinahosting-webhook.servingCertificate" . }}
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "dinahosting-webhook.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "dinahosting-webhook.servingCertificate" . }}
+  duration: 8760h # 1y
+  issuerRef:
+    name: {{ include "dinahosting-webhook.rootCAIssuer" . }}
+  dnsNames:
+    - {{ include "dinahosting-webhook.fullname" . }}
+    - {{ include "dinahosting-webhook.fullname" . }}.{{ .Release.Namespace }}
+    - {{ include "dinahosting-webhook.fullname" . }}.{{ .Release.Namespace }}.svc

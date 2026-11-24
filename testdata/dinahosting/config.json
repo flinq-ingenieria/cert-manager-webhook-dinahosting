@@ -1,0 +1,4 @@
+{
+  "usernameSecretRef": {"name": "dinahosting-credentials", "key": "username"},
+  "passwordSecretRef": {"name": "dinahosting-credentials", "key": "password"}
+}

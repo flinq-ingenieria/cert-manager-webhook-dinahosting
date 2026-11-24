@@ -1,0 +1,39 @@
+# 1) Wildcard por defecto de ingress-nginx: cubre *.zverp.com y
+#    *.runboat.zverp.com. Activar con el argumento del controlador
+#    --default-ssl-certificate=ingress-nginx/wildcard-zverp-tls
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-zverp
+  namespace: ingress-nginx
+spec:
+  secretName: wildcard-zverp-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: zerossl-dns
+  dnsNames:
+    - "*.zverp.com"
+    - "*.runboat.zverp.com"
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+---
+# 2) Wildcard de runboat en el secreto que ya referencian sus Ingress.
+#    cert-manager sobrescribirá el secreto actual (renovado a mano).
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-runboat
+  namespace: runboat
+spec:
+  secretName: wildcard-runboat-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: zerossl-dns
+  dnsNames:
+    - "*.runboat.zverp.com"
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always

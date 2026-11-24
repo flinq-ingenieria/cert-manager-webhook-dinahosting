@@ -1,0 +1,7 @@
+apiVersion: v2
+name: cert-manager-webhook-dinahosting
+description: cert-manager ACME DNS01 webhook solver for Dinahosting
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/flinq-ingenieria/cert-manager-webhook-dinahosting

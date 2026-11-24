@@ -1,0 +1,18 @@
+# Certificado de prueba: emite en un secreto temporal para validar la cadena
+# completa sin tocar los secretos en uso. Borrar tras comprobarlo.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wildcard-runboat-test
+  namespace: cert-manager
+spec:
+  secretName: wildcard-runboat-test-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: zerossl-dns
+  dnsNames:
+    - "*.runboat.zverp.com"
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
