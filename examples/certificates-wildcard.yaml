@@ -1,11 +1,12 @@
-# 1) Wildcard por defecto de ingress-nginx: cubre *.zverp.com y
-#    *.runboat.zverp.com. Activar con el argumento del controlador
-#    --default-ssl-certificate=ingress-nginx/wildcard-zverp-tls
+# 1) Certificado por defecto del controlador de ingress: cubre *.zverp.com y
+#    *.runboat.zverp.com. Con Traefik, lo referencia el TLSStore "default"
+#    (defaultCertificate.secretName: wildcard-zverp-tls) en su namespace.
+#    Con ingress-nginx sería --default-ssl-certificate=<ns>/wildcard-zverp-tls.
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: wildcard-zverp
-  namespace: ingress-nginx
+  namespace: traefik
 spec:
   secretName: wildcard-zverp-tls
   issuerRef:

@@ -54,7 +54,7 @@ Si el paquete de GHCR es privado, crear un `imagePullSecret` y pasarlo en
 - [`examples/certificate-test.yaml`](examples/certificate-test.yaml): certificado de
   prueba en un secreto temporal.
 - [`examples/certificates-wildcard.yaml`](examples/certificates-wildcard.yaml):
-  `*.zverp.com` + `*.runboat.zverp.com` como certificado por defecto de ingress-nginx,
+  `*.zverp.com` + `*.runboat.zverp.com` como certificado por defecto del ingress (TLSStore de Traefik),
   y el wildcard de runboat en su secreto actual.
 
 ## Desarrollo

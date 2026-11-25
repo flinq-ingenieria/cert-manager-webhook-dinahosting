@@ -16,7 +16,7 @@ ENVTEST_VERSION ?= release-0.21
 GO_IMAGE ?= golang:1.26-alpine
 DOCKER_GOPATH ?= $(HOME)/.cache/go-docker
 DOCKER_GO = docker run --rm -u $$(id -u):$$(id -g) -e HOME=/tmp -e GOPATH=/tmp/go \
-	-e GOCACHE=/tmp/go/cache -e GOFLAGS=-modcacherw \
+	-e GOCACHE=/tmp/go/cache -e GOFLAGS=-modcacherw -e GOBIN \
 	-e TEST_ZONE_NAME -e TEST_ASSET_ETCD -e TEST_ASSET_KUBE_APISERVER -e TEST_ASSET_KUBECTL \
 	-v $(DOCKER_GOPATH):/tmp/go -v $(CURDIR):$(CURDIR) -w $(CURDIR) $(GO_IMAGE) go
 
